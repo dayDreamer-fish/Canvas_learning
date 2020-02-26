@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <canvas width="500" height="300" id="myCanvas" style="border:1px solid #ccc"></canvas>
+
+</body>
+<script>
+  
+
+    init = function () {
+        var canvas = document.getElementById('myCanvas');
+        var ctx = canvas.getContext('2d');
+        function drawScreen(){
+            ctx.fillStyle = "#ffffaa";
+            ctx.fillRect(0,0,500,300);
+
+            ctx.fillStyle = "#000";
+            ctx.font="20px Sans-Serif";
+            ctx.textBaseline = "top";
+            ctx.fillText("Hello world!",195,80);
+            
+            ctx.strokeStyle = "#000";
+            ctx.strokeRect(5,5,490,290);
+
+            
+        }
+        drawScreen();
+    }
+
+    window.onload = init();
+</script>
+
+</html>

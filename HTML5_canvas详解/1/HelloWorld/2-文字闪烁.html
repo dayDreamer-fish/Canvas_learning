@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>文字闪烁</title>
+</head>
+
+<body>
+
+    <canvas width="500" height="300" id="myCanvas" style="border:1px solid #ccc"></canvas>
+
+</body>
+<script>
+    init = function () {
+        var canvas = document.getElementById('myCanvas');
+        var context = canvas.getContext('2d');
+
+        function drawScreen() {
+            context.globalAlpha = 1;
+            context.fillStyle = '#000';
+            context.fillRect(0, 0, 640, 480);
+            globalAlpha = .25;
+
+            if (fadeIn) {
+                alpha += .01;
+                if (alpha >= 1) {
+                    alpha = 1;
+                    fadeIn = false;
+                }
+            } else {
+                alpha -= .01;
+                if (alpha < 0) {
+                    alpha = 0;
+                    fadeIn = true;
+                }
+            }
+            context.font = '42px sans-serif';
+            context.textBaseline = 'top';
+            context.globalAlpha = alpha;
+            context.fillStyle = "#FFF";
+            context.fillText(text, 150, 150);
+
+
+
+        }
+
+
+
+        var text = "Hello world";
+        var alpha = 0;
+        var fadeIn = true;
+
+        function animation() {
+            requestAnimationFrame(animation)
+            drawScreen();
+        }
+
+        animation();
+
+    }
+
+    window.onload = init();
+</script>
+
+</html>
