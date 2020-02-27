@@ -23,8 +23,8 @@
     var canvas = document.querySelector('canvas');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    // 绘制上下文
     let ctx = canvas.getContext('2d');
+    let ballNums = 50;
     let colorArray = [
         '#4CBF88',
         '#F2B134',
@@ -38,7 +38,6 @@
         canvas.height = window.innerHeight
         init();
     })
-    let ballNums = 20;
 
     function randomIntFromRange(low, high) {
         return Math.floor(Math.random() * (high - low + 1) + low);
@@ -60,11 +59,61 @@
         return Math.sqrt(dx * dx + dy * dy);
     }
 
+    // 旋转向量
+    function rotateVector(v, theta) {
+        return {
+            dx: v.dx * Math.cos(theta) - v.dy * Math.sin(theta),
+            dy: v.dx * Math.cos(theta) + v.dy * Math.sin(theta)
+        }
+    }
 
+    function resolveCollision(p1, p2) {
+        let v1 = {
+            dx: p1.dx,
+            dy: p1.dy
+        };
+        let v2 = {
+            dx: p2.dx,
+            dy: p2.dy
+        };
 
-    function Particle(x, y, dx, dy, radius, color) {
+        //    旋转
+
+        let theta = -Math.atan2(p1.y - p2.y, p1.x - p2.x);
+
+        let v1Rotated = rotateVector(v1, theta);
+        let v2Rotated = rotateVector(v2, theta);
+
+        // 完全弹性碰撞计算新的速度（旋转后的坐标）
+        let v1RotatedAfterCollision = {
+            dx: (v1Rotated.dx * (p1.mass - p2.mass) + 2 * p2.mass * v2Rotated.dx) / (p1.mass + p2.mass),
+            dy: v1Rotated.dy
+           
+        };
+
+        let v2RotatedAfterCollision = {
+            dx: (v2Rotated.dx * (p2.mass - p1.mass) + 2 * p1.mass * v1Rotated.dx) / (p1.mass + p2.mass),
+            dy: v2Rotated.dy
+           
+        };
+
+        // 将新速度旋转回原来的角度获得真正的速度
+        let v1finalCollision = rotateVector(v1RotatedAfterCollision,-theta);
+        let v2finalCollision = rotateVector(v2RotatedAfterCollision,-theta);
+
+        //更新小球的速度
+        p1.dx = v1finalCollision.dx;
+        p1.dy = v1finalCollision.dy;
+        p2.dx = v2finalCollision.dx;
+        p2.dy = v2finalCollision.dy;
+
+    }
+
+    function Particle(x, y, mass, dx, dy, radius, color) {
+
         this.x = x;
         this.y = y;
+        this.mass = mass;
         this.dx = dx;
         this.dy = dy;
         this.radius = radius;
@@ -78,7 +127,24 @@
             ctx.closePath();
         }
 
-        this.update = function () {
+        this.update = function (ballArray) {
+
+            // 碰撞检测 
+            for (let p of ballArray) {
+                if (this === p) continue; //不要与进行自己比较
+                if (getDistance(this.x, this.y, p.x, p.y) <= this.radius + p.radius) { 
+                    let xVelDiff = p.dx - this.dx;
+                    let yVelDiff = p.dy - this.dy;
+                    let xDist = p.x - this.x;
+                    let yDist = p.y - this.y;
+
+                    if(xVelDiff * xDist + yVelDiff * yDist < 0){
+                        resolveCollision(this,p);
+                    }
+
+                }
+            }
+
             if (this.x + this.radius + this.dx > canvas.width ||
                 this.x - this.radius + this.dx < 0) {
                 this.dx = -this.dx;
@@ -105,7 +171,7 @@
             let radius = randomIntFromRange(15, 20);
             let x = randomIntFromRange(radius, canvas.width - radius);
             let y = randomIntFromRange(radius, canvas.height - radius);
-            // 检测重叠
+            //检测是否重叠  重叠则重新生成
             for (let j = 0; j < ballArray.length; j++) {
                 if (getDistance(x, y, ballArray[j].x, ballArray[j].y) <= radius + ballArray[j].radius) {
                     radius = randomIntFromRange(15, 20);
@@ -114,19 +180,20 @@
                     j = -1;
                 }
             }
+            let mass = radius * 0.5;
             let dx = randomFloatFromRange(-1, 1);
             let dy = randomFloatFromRange(-1, 1);
             let color = randomColor(colorArray);
-            ballArray.push(new Particle(x, y, 0, 0, radius, color));
+            ballArray.push(new Particle(x, y, mass, dx, dy, radius, color));
         }
     }
 
     function animate() {
         requestAnimationFrame(animate);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+        ctx.fillRect(0, 0,  canvas.width, canvas.height);
         for (let b of ballArray) {
-            b.update();
+            b.update(ballArray);
         }
     }
 
